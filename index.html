@@ -1,12 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html style="max-height: 100px;">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>NASIC</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <h1>НУ Вот и страничка!!!</h1>
+
+<body id="body" style="max-height: 100px;">
+    <div id="wrapper" class="wrapper">
+        <script type="text/javascript" src="resize_script.js"></script>
+        <div class="header">
+            <svg id="NASIC" style="position: absolute; top: 15px; left: 850px; width: 300px;"
+                viewBox="0 0 72.912 8.244">
+                <defs>
+                    <style>
+                        .cls-1 {
+                            fill: silver;
+                        }
+                    </style>
+                </defs>
+                <g>
+                    <path class="cls-1" d="M17.2,10.247h-2V4.032H2.688v6.215h-2V2H15.132L17.2,4.079Z"
+                        transform="translate(-0.684 -2.003)" />
+                    <path class="cls-1"
+                        d="M18.564,2H33.012l2.064,2.089v6.155H20.316L18.564,8.339V5.459H33.072V4.032H18.564Zm2.124,5.053V8.22H33.072V7.056Z"
+                        transform="translate(-0.684 -2.003)" />
+                    <path class="cls-1"
+                        d="M52.752,8.16l-2.064,2.087H36.576V8.22H50.688V6.791H38.2L36.444,4.932V4.079L38.508,2H52.272V4.032H38.508V5.2H50.9l1.848,1.967Z"
+                        transform="translate(-0.684 -2.003)" />
+                    <path class="cls-1" d="M56.124,10.247h-2V2h2Z" transform="translate(-0.684 -2.003)" />
+                    <path class="cls-1" d="M73.6,10.247H59.556L57.492,8.16V4.079L59.556,2H73.6V4.032H59.5V8.207H73.6Z"
+                        transform="translate(-0.684 -2.003)" />
+                </g>
+            </svg>
+        </div>
+        <div class="group">
+            <div id="log" class="log"></div>
+            <div id="content" class="content">
+                <table id="board_table" style="margin: auto; margin-top: 30px;">
+                    <caption id="table_caption"
+                        style="position: absolute; top: 100px; left: 450px;color: rgb(252, 252, 252);">Выберете плату
+                    </caption>
+                </table>
+            </div>
+            <div class="commands">
+                <button class="btn" onclick="setModal('modal_boards','block')">ВЫБРАТЬ ПЛАТУ</button>
+                <p></p>
+                <button class="btn" onclick="sendCmd('test')">ТЕСТ</button>
+                <button class="btn" onclick="sendCmd('auto_test')">АВТОТЕСТ</button>
+                <button class="btn" onclick="sendCmd('stop_auto_test')">ОСТАНОВИТЬ АВТОТЕСТ</button>
+                <p></p>
+                <button class="btn" onclick="setModal('modal_advanced','block')">РАСШИРЕННЫЙ</button>
+                <button class="btn" onclick="setModal('modal_eeprom','block')">EEPROM</button>
+                <button class="btn" onclick="setModal('modal_system','block')">СИСТЕМА</button>
+
+            </div>
+        </div>
+        <table style="position: absolute; top: 730px; left: 405px;">
+            <td id="3.3v" class="indicators">3.3v</td>
+            <td id="plug" class="indicators">PLUG</td>
+            <td id="rst" class="indicators">RST</td>
+            <td id="ri" class="indicators">RI</td>
+            <td id="temper" class="indicators" style="color: rgb(160, 160, 160); visibility: hidden;"></td>
+        </table>
+        <div id="modal_system" class="modal">
+            <div class="modal-content">
+                <span onclick="setModal('modal_system','none')" class="modal_close">x</span>
+                <h3 align="center">Настройки</h3>
+                <p>Cенсорные кнопки:</p>
+                <button class="btn"
+                    onclick="printLog ('Калибровка Touch','Новые калибровочные коеффициенты сохранены') ;setModal('modal_system','none');">КАЛИБРОВКА</button>
+                <p>WiFi подключение:</p>
+                <input id="ssid" type="search" placeholder="enter SSID AP">
+                <input id="pass" type="password" placeholder="enter PASS AP">
+                <p><button class="btn" onclick="sendSettingAP()">СОХРАНИТЬ</button>
+                <h3 align="center">Обновление ПО</h3>
+                <div>
+                    <div>
+                        <input accept=".bin" type="file" id="otafile" name="otafile" />
+                        <button id="upload" class="btn" onclick="startUpload()">ОБНОВИТЬ</button>
+                        <p></p>
+                    </div>
+                    <div id="progress"> </div>
+                </div>
+                <hr>
+                <p><button class="btn" onclick="sendCmd('reboot');setModal('modal_system','none');">ПЕРЕЗАГРУЗИТЬ
+                        УСТРОЙСТВО</button>
+            </div>
+
+        </div>
+
+        <div id="modal_boards" class="modal">
+            <div class="modal-content">
+                <span onclick="setModal('modal_boards','none')" class="modal_close">x</span>
+                <h3 align="center">Выбор платы</h3>
+                <button class="btn" onclick="setBoard(antminer_t17);setModal('modal_boards','none');">Antminer
+                    T17</button>
+                <button class="btn" onclick="setBoard(antminer_t17e);setModal('modal_boards','none');">Antminer
+                    T17E</button>
+                <button class="btn" onclick="setBoard(antminer_t17p);setModal('modal_boards','none');">Antminer
+                    T17+</button>
+                <button class="btn" onclick="setBoard(antminer_s17p);setModal('modal_boards','none');">Antminer
+                    S17+</button>
+                <button class="btn" onclick="setBoard(antminer_s19jPro);setModal('modal_boards','none');">Antminer
+                    S19j Pro</button>
+                <button class="btn" onclick="setBoard(antminer_s9);setModal('modal_boards','none');">Antminer
+                    S9</button>
+                <button class="btn" onclick="setBoard(antminer_l3);setModal('modal_boards','none');">Antminer
+                    L3+</button>
+                <button class="btn" onclick="setBoard(whatsminer_m20s);setModal('modal_boards','none');">Whatsminer
+                    M20S</button>
+                <button class="btn" onclick="setBoard(whatsminer_m21s);setModal('modal_boards','none');">Whatsminer
+                    M21S</button>
+            </div>
+        </div>
+        <div id="modal_advanced" class="modal">
+            <div class="modal-content">
+                <span onclick="setModal('modal_advanced','none')" class="modal_close">x</span>
+                <h3 align="center">Расширенный набор команд</h3>
+                <button class="btn" onclick="sendCmd('3.3v_on')">ВКЛЮЧИТЬ 3.3v </button>
+                <button class="btn" onclick="sendCmd('3.3v_off')">ОТКЛЮЧИТЬ 3.3v</button>
+                <button class="btn" onclick="sendCmd('pwr_on')">ВКЛ ПИТАНИЕ ЧИПОВ </button>
+                <button class="btn" onclick="sendCmd('pwr_off')">ОТКЛ ПИТАНИЕ ЧИПОВ</button>
+                <button class="btn" onclick="sendCmd('rst_h')">ПОДНЯТЬ RST</button>
+                <button class="btn" onclick="sendCmd('rst_l')">ОПУСТИТЬ RST</button>
+                <button class="btn" onclick="sendCmd('temperature_on')">ВКЛ ОПРОС ТЕМПЕРАТУРЫ</button>
+                <button class="btn" onclick="sendCmd('temperature_off')">ОТКЛ ОПРОС ТЕМПЕРАТУРЫ</button>
+                <button class="btn" onclick="sendCmd('get_chip_state')">ОПРОС ЧИПОВ</button>
+                <button class="btn" onclick="readByteData('chips')">ВЫВОД ОТВЕТА ЧИПОВ</button>
+            </div>
+        </div>
+        <div id="modal_eeprom" class="modal">
+            <div class="modal-content">
+                <span onclick="setModal('modal_eeprom','none')" class="modal_close">x</span>
+                <h3 align="center">EEPROM</h3>
+                <button class="btn" onclick="sendCmd('board_to_eeprom_buf')">ПЛАТА > БУФЕР</button>
+                <button class="btn" onclick="sendCmd('eeprom_buf_to_board')">БУФЕР > ПЛАТА</button>
+                <button class="btn" onclick="sendCmd('flash_to_board')">FLASH > БУФЕР > ПЛАТА</button>
+                <p></p>
+                <div>
+                    <div>
+                        <input accept=".bin" type="file" id="eeprom" name="eeprom" />
+                        <button class="btn" id="uploadEEP" onclick="uploadEeprom()">ФАЙЛ > БУФЕР</button>
+                    </div>
+                </div>
+                <button class="btn" onclick="readByteData('eeprom_buf_to_file')">БУФЕР > ФАЙЛ</button>
+                <button class="btn" onclick="sendCmd('eeprom_buf_to_flash')">БУФЕР > FLASH</button>
+            </div>
+        </div>
+        <div class="lbl" id="state"></div>
+    </div>
+    <script type="text/javascript" src="boards.js"></script>
+    <script type="text/javascript" src="main_script.js"></script>
 </body>
+
 </html>
