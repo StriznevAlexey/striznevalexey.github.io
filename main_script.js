@@ -1,17 +1,20 @@
 
 var selected_board = 'empty';
-var power = false;
 document.getElementById("3.3v").style = "color: rgb(103, 255, 65);";
 document.getElementById("plug").style = "color: rgb(103, 255, 65);";
 document.getElementById("ri").style = "color: rgb(103, 255, 65);";
+
+var autotest_timer_id;
+const autotest_quantity = 99;
+var autotest_counter = 0;
 
 function printLog(echo, resp) {
 
     var now = new Date();
     var log = document.getElementById("log");
 
-    log.innerHTML += '<div class="page_msg">' + echo + '<div class="group"><div class="time_msg" style="float: right;">' + now.toTimeString().slice(0, 8) + '</div></div></div><br>';
-    log.innerHTML += '<div class="esp_msg">' + resp + '<div class="time_msg">' + now.toTimeString().slice(0, 8) + '</div></div><br>';
+    if (echo != "") log.innerHTML += '<div class="page_msg">' + echo + '<div class="group"><div class="time_msg" style="float: right;">' + now.toTimeString().slice(0, 8) + '</div></div></div><br>';
+    if (resp != "") log.innerHTML += '<div class="esp_msg">' + resp + '<div class="time_msg">' + now.toTimeString().slice(0, 8) + '</div></div><br>';
     log.scrollTop = 99999;
 }
 
@@ -106,50 +109,103 @@ function uploadEeprom() {
     }
 }
 
-function sendCmd(cmd) {
+function sendCmd(cmd, do_not_log) {
 
     var asic_array = Array.from(document.getElementsByClassName("asics"));
 
     switch (cmd) {
         case "test": {
-            sendCmd("pwr_on")
-            sendCmd("3.3v_on")
             setTimeout(function () {
-                sendCmd("pwr_off")
+                sendCmd("pwr_off", true)
+                sendCmd("rst_l", true)
             }, 700);
             if (selected_board != 'empty') {
+                stop_auto_test();
+                sendCmd("pwr_on", true);
+                sendCmd("3.3v_on", true);
+                sendCmd("rst_h", true)
                 printLog("Запуск одиночного теста", "Количество ответивших чипов: " + selected_board.num_chips);
                 highlight_asics(selected_board.num_chips);
 
             }
             else printLog("Запуск одиночного теста", "Плата не выбрана!")
         }; break;
+        case "auto_test": {
+            if (selected_board != 'empty') {
+                if (autotest_counter == 0) {
+                    autotest_counter = autotest_quantity
+                    auto_test();
+                }
+            }
+            else printLog("Запуск циклического теста", "Плата не выбрана!")
+        }; break;
+
+        case "stop_auto_test": {
+            printLog("Останов теста", "");
+            if (autotest_counter > 0) {
+                stop_auto_test();
+            } else {
+                printLog("", "Циклический тест не запущен");
+            }
+
+        }; break;
         case "pwr_on": {
             asic_array.forEach(function (asic) { asic.style.color = "rgb(253, 165, 0)"; });
-            power = true;
+            if (!do_not_log) printLog("Включить питание", "На чипы подано папряжение питания");
         }; break;
         case "pwr_off": {
             asic_array.forEach(function (asic) { asic.style.color = "rgb(99, 99, 99)"; });
-            power = false;
+            if (!do_not_log) printLog("Отключить питание", "Напряжение питания с чипов снято");
         }; break;
         case "3.3v_on": {
             document.getElementById("3.3v").style = "color: rgb(103, 255, 65);";
             document.getElementById("plug").style = "color: rgb(103, 255, 65);";
-            printLog("Включить 3.3v", "Подано питание на контроллер платы");
+            if (!do_not_log) printLog("Включить 3.3v", "Подано питание на контроллер платы");
         }; break;
         case "3.3v_off": {
             document.getElementById("3.3v").style = "rgb(99, 99, 99);";
             document.getElementById("plug").style = "rgb(99, 99, 99);";
-            printLog("Отключить 3.3v","Питание с контроллера платы снято")
+            if (!do_not_log) printLog("Отключить 3.3v", "Питание с контроллера платы снято")
         }; break;
         case "rst_h": {
             document.getElementById("rst").style = "color: rgb(103, 255, 65);";
+            if (!do_not_log) printLog("Управление RST", "RST: высокий уровень")
         }; break;
         case "rst_l": {
             document.getElementById("rst").style = "rgb(99, 99, 99);";
+            if (!do_not_log) printLog("Управление RST", "RST: низкий уровень")
+        }; break;
+        case "reboot": {
+                document.open();
+                document.write("Устройство перезагружено. Обновите страницу.");
+                document.close();
         }; break;
         default: break;
     }
+}
+
+function auto_test() {
+    sendCmd("pwr_on", true);
+    sendCmd("3.3v_on", true);
+    sendCmd("rst_h", true)
+    printLog("Запуск циклического теста", "");
+    autotest_timer_id = setInterval(function () {
+        printLog("", "Количество ответивших чипов: " + selected_board.num_chips);
+        printLog("", "Осталось повторов: " + (autotest_counter));
+        highlight_asics(selected_board.num_chips);
+        autotest_counter--;
+        if (autotest_counter < 0) {
+            stop_auto_test();
+        }
+    }, 1000);
+
+}
+
+function stop_auto_test() {
+    autotest_counter = 0;
+    clearInterval(autotest_timer_id);
+    sendCmd("rst_l", true);
+    printLog("", "Тест закончен");
 }
 
 
